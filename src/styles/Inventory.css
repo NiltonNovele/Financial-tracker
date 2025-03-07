@@ -1,0 +1,97 @@
+/* Inventory Page Background */
+body {
+  background: linear-gradient(to bottom right, #004d26, #f8f9fa);
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Inventory Container */
+.inventory-container {
+  width: 90%;
+  margin: 20px auto;
+  background-color: rgba(255, 255, 255, 0.9); /* Slight transparency for effect */
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Inventory Header */
+.inventory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+h1 {
+  color: #007b5e;
+}
+
+/* Search Bar */
+.search-bar {
+  padding: 10px;
+  width: 250px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+/* Table Styles */
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: rgb(233, 233, 233);
+}
+
+.inventory-table th, .inventory-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  color: black;
+}
+
+.inventory-table th {
+  background-color: #007b5e;
+  color: white;
+}
+
+.inventory-table tr:hover {
+  background-color: #b3b1b1;
+}
+
+/* Checkbox */
+input[type="checkbox"] {
+  transform: scale(1.2);
+}
+
+/* Buttons */
+.delete-btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.delete-btn:hover {
+  background-color: #e03e3e;
+}
+
+.add-btn {
+  padding: 10px 15px;
+  background-color: #007b5e;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 15px;
+}
+
+.add-btn:hover {
+  background-color: #005b45;
+}
