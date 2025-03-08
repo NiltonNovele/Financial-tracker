@@ -1,27 +1,63 @@
 import React, { useState } from "react";
 import axios from "axios";
-const inventory = [
-  { id: 1, name: "Product 1", price: 10.5, barcode: "12345" },
-  { id: 2, name: "Product 2", price: 15.0, barcode: "12346" },
-  { id: 3, name: "Product 3", price: 7.5, barcode: "12347" },
-  { id: 4, name: "Product 4", price: 12.0, barcode: "12348" },
-];
 
 const Sales = () => {
   const [cart, setCart] = useState([]);
   const [barcodeInput, setBarcodeInput] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [cash, setCash] = useState("");
+  const [card, setCard] = useState("");
 
-  const handleAddProduct = (barcode) => {
-    const product = inventory.find((product) => product.barcode === barcode);
-    if (product) {
-      const productWithQuantity = {
-        ...product,
-        quantity,
-        total: (product.price * quantity).toFixed(2),
-      };
-      setCart([...cart, productWithQuantity]);
-      setBarcodeInput(""); 
+  const handleAddProduct = async () => {
+    if (!barcodeInput) return;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/products/search?q=${barcodeInput}`
+      );
+      const product = response.data[0];
+
+      if (product) {
+        const productWithQuantity = {
+          ...product,
+          quantity,
+          total: (product.price * quantity).toFixed(2),
+        };
+
+        setCart((prevCart) => [...prevCart, productWithQuantity]);
+        setTotalAmount((prevTotal) => (prevTotal + parseFloat(productWithQuantity.total)).toFixed(2));
+        setBarcodeInput("");
+      }
+    } catch (err) {
+      alert("Error fetching product");
+    }
+  };
+
+  const handleFinalizeSale = async () => {
+    if (cart.length === 0) {
+      alert("Cart is empty!");
+      return;
+    }
+
+    const saleData = {
+      items: cart.map((item) => ({
+        productId: item._id,
+        quantity: item.quantity,
+      })),
+      cash: parseFloat(cash) || 0,
+      card: parseFloat(card) || 0,
+    };
+
+    try {
+      await axios.post("http://localhost:5000/api/sale", saleData);
+      alert("Sale completed successfully!");
+      setCart([]);
+      setTotalAmount(0);
+      setCash("");
+      setCard("");
+    } catch (err) {
+      alert("Error processing sale");
     }
   };
 
@@ -37,97 +73,27 @@ const Sales = () => {
     setQuantity(Number(e.target.value));
   };
 
-  const calculateTotal = () => {
-    return cart
-      .reduce((total, item) => total + parseFloat(item.total), 0)
-      .toFixed(2);
-  };
-  
-  const Sales = () => {
-    const [cart, setCart] = useState([]);
-    const [barcodeInput, setBarcodeInput] = useState("");
-    const [quantity, setQuantity] = useState(1);
-    const [totalAmount, setTotalAmount] = useState(0);
-  
-    const handleAddProduct = async () => {
-      const response = await axios.get(
-        `http://localhost:5000/api/products/search?q=${barcodeInput}`
-      );
-      const product = response.data[0];
-      if (product) {
-        const productWithQuantity = {
-          ...product,
-          quantity,
-          total: (product.price * quantity).toFixed(2),
-        };
-        setCart([...cart, productWithQuantity]);
-        setTotalAmount(
-          cart.reduce((total, item) => total + parseFloat(item.total), 0).toFixed(2)
-        );
-        setBarcodeInput(""); 
-      }
-    };
-  
-    const handleFinalizeSale = async () => {
-      const saleData = {
-        items: cart.map((item) => ({
-          productId: item._id,
-          quantity: item.quantity,
-        })),
-        cash: 100, 
-        card: 50, 
-      };
-  
-      try {
-        const response = await axios.post(
-          "http://localhost:5000/api/sale",
-          saleData
-        );
-        alert("Sale completed successfully!");
-        setCart([]);
-        setTotalAmount(0);
-      } catch (err) {
-        alert("Error processing sale");
-      }
-    };
-  
   return (
     <div className="sales-page">
       <h1>Sales - Cashier</h1>
       <div className="input-section">
         <div className="barcode-input">
-          <input
-            type="text"
-            placeholder="Enter Barcode"
-            value={barcodeInput}
-            readOnly
-          />
+          <input type="text" placeholder="Enter Barcode" value={barcodeInput} readOnly />
           <div className="button-grid">
             {[...Array(9).keys()].map((number) => (
-              <button
-                key={number}
-                onClick={() => handleNumberClick((number + 1).toString())}
-              >
+              <button key={number} onClick={() => handleNumberClick((number + 1).toString())}>
                 {number + 1}
               </button>
             ))}
             <button onClick={handleClearInput}>Clear</button>
             <button onClick={() => handleNumberClick("0")}>0</button>
-            <button onClick={() => handleAddProduct(barcodeInput)}>
-              Add Product
-            </button>
+            <button onClick={handleAddProduct}>Add Product</button>
           </div>
         </div>
 
         <div className="quantity-section">
           <label>Quantity</label>
-          <input
-            type="number"
-            value={quantity}
-            min="1"
-            max="10"
-            onChange={handleQuantityChange}
-          />
+          <input type="number" value={quantity} min="1" max="10" onChange={handleQuantityChange} />
         </div>
       </div>
 
@@ -154,26 +120,20 @@ const Sales = () => {
           </tbody>
         </table>
         <div className="total">
-          <h4>Total: ${calculateTotal()}</h4>
+          <h4>Total: ${totalAmount}</h4>
         </div>
       </div>
 
       <div className="payment">
         <h3>Payment</h3>
         <div className="payment-options">
-          <input type="number" placeholder="Cash" className="payment-input" />
-          <input type="number" placeholder="Card" className="payment-input" />
+          <input type="number" placeholder="Cash" className="payment-input" value={cash} onChange={(e) => setCash(e.target.value)} />
+          <input type="number" placeholder="Card" className="payment-input" value={card} onChange={(e) => setCard(e.target.value)} />
         </div>
-        <button className="print-btn">Finalize Sale</button>
+        <button className="print-btn" onClick={handleFinalizeSale}>Finalize Sale</button>
       </div>
     </div>
   );
 };
 
-  <div className="sales-page">
-    <button onClick={handleAddProduct}>Add Product</button>
-    <button onClick={handleFinalizeSale}>Finalize Sale</button>
-  </div>
-
-};
 export default Sales;

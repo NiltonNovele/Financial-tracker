@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../styles/Inventory.css"; // Importing styles
 
@@ -12,10 +11,10 @@ const generateRandomProducts = () => {
       id: 1000 + i,
       name: `Product ${i}`,
       category: categories[Math.floor(Math.random() * categories.length)],
-      barcode: Math.floor(100000000000 + Math.random() * 900000000000), 
-      dateAdded: `2024-02-${String((i % 28) + 1).padStart(2, "0")}`, 
+      barcode: Math.floor(100000000000 + Math.random() * 900000000000),
+      dateAdded: `2024-02-${String((i % 28) + 1).padStart(2, "0")}`,
       stock: Math.floor(Math.random() * 100) + 1,
-      price: `MZN ${((Math.random() * 500) + 5).toFixed(2)}`, 
+      price: `MZN ${((Math.random() * 500) + 5).toFixed(2)}`,
     });
   }
   return randomProducts;
@@ -25,6 +24,18 @@ const Inventory = () => {
   const [products, setProducts] = useState(generateRandomProducts());
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProducts, setSelectedProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/products?searchTerm=${searchTerm}`);
+        setProducts(response.data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    };
+    fetchProducts();
+  }, [searchTerm]);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value.toLowerCase());
@@ -43,9 +54,8 @@ const Inventory = () => {
     setSelectedProducts([]);
   };
 
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     const newProduct = {
-      id: products.length + 1001,
       name: "New Product",
       category: "Miscellaneous",
       barcode: Math.floor(100000000000 + Math.random() * 900000000000),
@@ -53,37 +63,15 @@ const Inventory = () => {
       stock: 10,
       price: `MZN ${(Math.random() * 500 + 5).toFixed(2)}`,
     };
-    setProducts([...products, newProduct]);
-  };
 
-  const Inventory = () => {
-    const [products, setProducts] = useState([]);
-    const [searchTerm, setSearchTerm] = useState("");
-  
-    useEffect(() => {
-      const fetchProducts = async () => {
-        const response = await axios.get(
-          `http://localhost:5000/api/products?searchTerm=${searchTerm}`
-        );
-        setProducts(response.data);
-      };
-      fetchProducts();
-    }, [searchTerm]);
-  
-    const handleAddProduct = async () => {
-      const newProduct = {
-        name: "New Product",
-        category: "Miscellaneous",
-        barcode: "123456789012",
-        dateAdded: "2024-02-01",
-        stock: 10,
-        price: "MZN 20.00",
-      };
+    try {
       const response = await axios.post("http://localhost:5000/api/products", newProduct);
       setProducts([...products, response.data]);
-    };
+    } catch (error) {
+      console.error("Error adding product:", error);
+    }
+  };
 
-    
   return (
     <div className="inventory-container">
       <div className="inventory-header">
@@ -95,7 +83,9 @@ const Inventory = () => {
           value={searchTerm}
           onChange={handleSearch}
         />
-        <button className="add-btn" onClick={handleAddProduct}>Add Product</button>
+        <button className="add-btn" onClick={handleAddProduct}>
+          Add Product
+        </button>
       </div>
 
       <table className="inventory-table">
@@ -146,17 +136,6 @@ const Inventory = () => {
       )}
     </div>
   );
-};
-<div className="inventory-page">
-<input
-  type="text"
-  placeholder="Search Products"
-  value={searchTerm}
-  onChange={(e) => setSearchTerm(e.target.value)}
-/>
-<button onClick={handleAddProduct}>Add Product</button>
-{/* Render Products Table */}
-</div>
 };
 
 export default Inventory;
